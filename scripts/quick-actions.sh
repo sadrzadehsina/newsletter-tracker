@@ -5,8 +5,21 @@
 
 set -e
 
-REPO_OWNER="sadrzadehsina"
-REPO_NAME="newsletter-tracker"
+# Auto-detect repository from current directory or use default
+if git rev-parse --is-inside-work-tree &>/dev/null; then
+    REPO_URL=$(git config --get remote.origin.url 2>/dev/null || echo "")
+    if [[ $REPO_URL =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then
+        REPO_OWNER="${BASH_REMATCH[1]}"
+        REPO_NAME="${BASH_REMATCH[2]}"
+    else
+        REPO_OWNER="sadrzadehsina"
+        REPO_NAME="newsletter-tracker"
+    fi
+else
+    REPO_OWNER="sadrzadehsina"
+    REPO_NAME="newsletter-tracker"
+fi
+
 BASE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}"
 
 # Colors for output
@@ -124,9 +137,24 @@ generate_analytics() {
     echo -e "${BLUE}📈 Generating Analytics${NC}"
     echo
     
-    # Check if Python script exists
-    if [ -f "scripts/analytics.py" ]; then
-        python3 scripts/analytics.py --owner "$REPO_OWNER" --repo "$REPO_NAME"
+    # Find the analytics script - check multiple possible locations
+    SCRIPT_LOCATIONS=(
+        "$(dirname "$0")/analytics.py"
+        "$HOME/.newsletter-tracker/analytics.py"
+        "$(pwd)/scripts/analytics.py"
+        "$(git rev-parse --show-toplevel 2>/dev/null)/scripts/analytics.py"
+    )
+    
+    ANALYTICS_SCRIPT=""
+    for location in "${SCRIPT_LOCATIONS[@]}"; do
+        if [ -f "$location" ]; then
+            ANALYTICS_SCRIPT="$location"
+            break
+        fi
+    done
+    
+    if [ -n "$ANALYTICS_SCRIPT" ]; then
+        python3 "$ANALYTICS_SCRIPT" --owner "$REPO_OWNER" --repo "$REPO_NAME"
     else
         print_warning "Analytics script not found. Opening GitHub insights instead..."
         open "${BASE_URL}/pulse"
@@ -199,6 +227,7 @@ show_help() {
     echo "🔧 Setup:"
     echo "  - Install GitHub CLI: brew install gh"
     echo "  - Authenticate: gh auth login"
+    echo "  - Global access: This script can be run from anywhere"
     echo
     echo "📝 Article Management:"
     echo "  - Use issue templates for consistency"
@@ -222,7 +251,12 @@ show_help() {
     echo "  - Auto-labeling based on content"
     echo "  - Progress tracking on completion"
     echo
-    echo "📚 For more help, visit: ${BASE_URL}/blob/main/docs/how-to-use.md"
+    echo "🌐 Global Usage:"
+    echo "  - Run 'newsletter' from any directory"
+    echo "  - Auto-detects newsletter-tracker repos"
+    echo "  - Falls back to default repo if not in git directory"
+    echo
+    echo "📚 Repository: ${BASE_URL}"
 }
 
 # Main script logic
