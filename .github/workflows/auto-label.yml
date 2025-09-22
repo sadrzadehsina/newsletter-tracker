@@ -1,0 +1,113 @@
+name: 🏷️ Auto-Label Articles
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, '[ARTICLE]') || contains(github.event.issue.title, '[NOTE]')
+    
+    steps:
+      - name: Auto-label based on content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const body = issue.body ? issue.body.toLowerCase() : '';
+            const content = title + ' ' + body;
+            
+            const labelsToAdd = [];
+            
+            // Technology keywords
+            if (/\b(ai|artificial intelligence|machine learning|ml|programming|software|code|tech|api|algorithm|data|python|javascript|react|node|cloud|aws|azure|github|open source)\b/.test(content)) {
+              labelsToAdd.push('tech');
+            }
+            
+            // Business keywords
+            if (/\b(business|startup|entrepreneur|funding|revenue|profit|market|strategy|leadership|management|finance|investment|venture capital)\b/.test(content)) {
+              labelsToAdd.push('business');
+            }
+            
+            // Personal development keywords
+            if (/\b(productivity|learning|skills|career|growth|development|habits|time management|focus|motivation|goals)\b/.test(content)) {
+              labelsToAdd.push('personal');
+            }
+            
+            // AI/ML specific
+            if (/\b(chatgpt|gpt|llm|neural network|deep learning|nlp|computer vision|robotics|automation)\b/.test(content)) {
+              labelsToAdd.push('ai');
+            }
+            
+            // Startup specific
+            if (/\b(startup|founder|seed|series a|vc|pitch|mvp|product market fit|scaling)\b/.test(content)) {
+              labelsToAdd.push('startups');
+            }
+            
+            // Reading time estimation
+            if (content.includes('quick read') || content.includes('< 5 min')) {
+              labelsToAdd.push('quick-read');
+            } else if (content.includes('long read') || content.includes('15+ min') || content.includes('30+ min')) {
+              labelsToAdd.push('long-read');
+            }
+            
+            // Priority detection
+            if (content.includes('high priority') || content.includes('must read') || content.includes('urgent')) {
+              labelsToAdd.push('high-priority');
+            }
+            
+            // Newsletter source detection
+            if (/morning brew/.test(content)) {
+              labelsToAdd.push('morning-brew');
+            }
+            if (/hacker news/.test(content)) {
+              labelsToAdd.push('hacker-news');
+            }
+            if (/medium/.test(content)) {
+              labelsToAdd.push('medium');
+            }
+            if (/the hustle/.test(content)) {
+              labelsToAdd.push('the-hustle');
+            }
+            
+            // Add labels if any were detected
+            if (labelsToAdd.length > 0) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: issue.number,
+                labels: labelsToAdd
+              });
+              
+              console.log(`Added labels: ${labelsToAdd.join(', ')}`);
+            }
+            
+            // Add helpful comment for new articles
+            if (issue.state === 'open' && !issue.body.includes('Reading Progress Update')) {
+              const welcomeComment = `👋 **Welcome to your article tracker!**
+              
+            I've automatically analyzed this article and added relevant labels. Here are some quick actions:
+            
+            ## 🎯 Quick Actions
+            - 📝 **Add reading notes:** Comment on this issue as you read
+            - 🏷️ **Update labels:** Add or modify labels as needed  
+            - ⭐ **Mark important:** Add the \`starred\` label for favorites
+            - ✅ **Mark complete:** Close this issue when finished reading
+            
+            ## 📋 Reading Tips
+            - Use the [note template](${context.payload.repository.html_url}/blob/main/templates/note-template.md) for structured comments
+            - Link related articles using \`#issue-number\`
+            - Add action items as checkboxes in comments
+            
+            Happy reading! 📚`;
+            
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: welcomeComment
+              });
+            }

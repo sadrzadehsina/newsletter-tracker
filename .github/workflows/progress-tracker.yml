@@ -1,0 +1,148 @@
+name: 🔄 Reading Progress Tracker
+
+on:
+  issues:
+    types: [closed, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  track-progress:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Reading Progress
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            
+            if (context.eventName === 'issues') {
+              const issue = context.payload.issue;
+              
+              if (context.payload.action === 'closed') {
+                // Add completion comment when article is marked as read
+                const completionMessage = `🎉 **Article Completed!**
+                
+                **📅 Completed on:** ${new Date().toLocaleDateString()}
+                **⏱️ Total comments:** ${issue.comments}
+                
+                ## 📊 Quick Stats
+                - 📰 **Article:** ${issue.title}
+                - 🏷️ **Categories:** ${issue.labels.map(l => l.name).join(', ')}
+                - 💬 **Discussion:** ${issue.comments} comments
+                
+                ## 🎯 Next Steps
+                - [ ] Apply any learnings from this article
+                - [ ] Share insights with relevant people
+                - [ ] Find related articles to read
+                - [ ] Update any action items in other issues
+                
+                Great job on completing this article! 📚✨`;
+                
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: completionMessage
+                });
+                
+                // Add 'completed' label
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['completed']
+                });
+                
+                // Remove 'to-read' and 'reading' labels
+                const labelsToRemove = ['to-read', 'reading'];
+                for (const label of labelsToRemove) {
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner,
+                      repo,
+                      issue_number: issue.number,
+                      name: label
+                    });
+                  } catch (error) {
+                    // Label might not exist, ignore error
+                  }
+                }
+              }
+              
+              if (context.payload.action === 'reopened') {
+                // When reopened, add back to reading queue
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['to-read']
+                });
+                
+                // Remove completed label
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    name: 'completed'
+                  });
+                } catch (error) {
+                  // Label might not exist, ignore error
+                }
+              }
+            }
+            
+            if (context.eventName === 'issue_comment') {
+              const issue = context.payload.issue;
+              const comment = context.payload.comment;
+              
+              // If this is the first substantial comment (> 50 chars), mark as 'reading'
+              if (comment.body.length > 50 && issue.comments <= 2) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['reading']
+                });
+                
+                // Remove 'to-read' label
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    name: 'to-read'
+                  });
+                } catch (error) {
+                  // Label might not exist, ignore error
+                }
+              }
+              
+              // Check for action items in comments and create follow-up issues
+              const actionItemRegex = /- \[ \] (.+)/g;
+              const actionItems = [...comment.body.matchAll(actionItemRegex)];
+              
+              if (actionItems.length > 0) {
+                const followUpBody = `📋 **Follow-up Actions from Article:** ${issue.title}
+                
+                Original article: #${issue.number}
+                
+                ## Action Items to Complete:
+                ${actionItems.map(match => `- [ ] ${match[1]}`).join('\n')}
+                
+                ## Context
+                These action items were identified while reading the article. Complete them to maximize the value from your reading.
+                
+                ---
+                *Auto-generated from comment in #${issue.number}*`;
+                
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title: `📋 Actions from: ${issue.title}`,
+                  body: followUpBody,
+                  labels: ['action-items', 'follow-up']
+                });
+              }
+            }

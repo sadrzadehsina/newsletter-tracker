@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 How to Use Guide
+    url: https://github.com/sadrzadehsina/newsletter-tracker/blob/main/docs/how-to-use.md
+    about: Learn how to use this newsletter tracking system effectively
+  - name: 🔍 Search Existing Articles
+    url: https://github.com/sadrzadehsina/newsletter-tracker/issues
+    about: Browse and search through your saved articles
+  - name: 📊 View Dashboard
+    url: https://github.com/sadrzadehsina/newsletter-tracker
+    about: Go to the main dashboard to see your reading statistics

@@ -1,0 +1,81 @@
+name: 📚 Reading Collection
+description: Create a curated collection of related articles
+title: "[COLLECTION] "
+labels: ["collection", "curation"]
+body:
+  - type: input
+    id: collection-title
+    attributes:
+      label: "📚 Collection Title"
+      description: "What's the theme of this collection?"
+      placeholder: "e.g., AI in Healthcare, Startup Funding Trends, Remote Work Best Practices"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "📖 Description"
+      description: "Describe the purpose and scope of this collection"
+      placeholder: "This collection focuses on..."
+      render: markdown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: collection-type
+    attributes:
+      label: "🎯 Collection Type"
+      description: "What kind of collection is this?"
+      options:
+        - "📊 Research Project"
+        - "🎓 Learning Path"
+        - "📈 Trend Analysis"
+        - "💡 Best Practices"
+        - "🔍 Deep Dive Topic"
+        - "📅 Time-based (Week/Month)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: articles-list
+    attributes:
+      label: "📋 Articles to Include"
+      description: "List the articles you want to include (you can link to existing issues)"
+      placeholder: |
+        - [ ] #123 - Article Title
+        - [ ] #456 - Another Article
+        - [ ] [External Article](https://example.com)
+      render: markdown
+
+  - type: textarea
+    id: learning-goals
+    attributes:
+      label: "🎯 Learning Goals"
+      description: "What do you hope to learn or achieve with this collection?"
+      placeholder: "By the end of this collection, I want to understand..."
+      render: markdown
+
+  - type: input
+    id: target-completion
+    attributes:
+      label: "📅 Target Completion Date"
+      description: "When do you want to finish this collection?"
+      placeholder: "2024-12-31"
+
+  - type: checkboxes
+    id: sharing
+    attributes:
+      label: "🔗 Sharing Options"
+      description: "How might you share or use this collection?"
+      options:
+        - label: "📝 Write a summary blog post"
+          value: blog-post
+        - label: "💬 Share insights on social media"
+          value: social-media
+        - label: "👥 Discuss with colleagues"
+          value: discuss-colleagues
+        - label: "📊 Create a presentation"
+          value: presentation
+        - label: "🔖 Keep as personal reference"
+          value: personal-reference

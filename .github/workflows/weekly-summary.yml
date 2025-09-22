@@ -1,0 +1,116 @@
+name: 📊 Weekly Reading Summary
+
+on:
+  schedule:
+    # Runs every Sunday at 9 PM UTC
+    - cron: '0 21 * * 0'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  weekly-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Generate Weekly Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            
+            // Get issues created this week
+            const newArticles = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              since: oneWeekAgo.toISOString(),
+              state: 'all',
+              per_page: 100
+            });
+            
+            // Get issues closed this week (completed reading)
+            const completedArticles = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'closed',
+              since: oneWeekAgo.toISOString(),
+              per_page: 100
+            });
+            
+            // Calculate statistics
+            const stats = {
+              newArticles: newArticles.data.filter(issue => !issue.pull_request).length,
+              completedReading: completedArticles.data.filter(issue => !issue.pull_request).length,
+              totalOpen: 0,
+              categories: {}
+            };
+            
+            // Get current open issues for total count
+            const openIssues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            stats.totalOpen = openIssues.data.filter(issue => !issue.pull_request).length;
+            
+            // Count by categories
+            openIssues.data.forEach(issue => {
+              if (issue.pull_request) return;
+              issue.labels.forEach(label => {
+                if (typeof label === 'string') {
+                  stats.categories[label] = (stats.categories[label] || 0) + 1;
+                } else {
+                  stats.categories[label.name] = (stats.categories[label.name] || 0) + 1;
+                }
+              });
+            });
+            
+            // Create summary comment
+            const summary = `# 📊 Weekly Reading Summary
+            
+            ## 📈 This Week's Activity
+            - 📰 **New Articles Saved:** ${stats.newArticles}
+            - ✅ **Articles Completed:** ${stats.completedReading}
+            - 📚 **Total in Reading Queue:** ${stats.totalOpen}
+            - 📊 **Reading Completion Rate:** ${stats.newArticles > 0 ? Math.round((stats.completedReading / stats.newArticles) * 100) : 0}%
+            
+            ## 🏷️ Categories Breakdown
+            ${Object.entries(stats.categories)
+              .sort(([,a], [,b]) => b - a)
+              .slice(0, 5)
+              .map(([cat, count]) => `- **${cat}:** ${count} articles`)
+              .join('\n')}
+            
+            ## 🎯 Quick Actions
+            - [📚 View Reading Queue](${context.payload.repository.html_url}/issues?q=is%3Aissue+is%3Aopen+label%3A%22to-read%22)
+            - [⭐ High Priority Items](${context.payload.repository.html_url}/issues?q=is%3Aissue+is%3Aopen+label%3A%22high-priority%22)
+            - [📱 Add New Article](${context.payload.repository.html_url}/issues/new/choose)
+            
+            ---
+            *Generated automatically on ${new Date().toLocaleDateString()}*
+            `;
+            
+            // Create or update the weekly summary issue
+            const title = `📊 Weekly Summary - ${new Date().toLocaleDateString()}`;
+            
+            try {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: summary,
+                labels: ['📊 weekly-summary', 'automation']
+              });
+              console.log('Weekly summary created successfully!');
+            } catch (error) {
+              console.error('Error creating weekly summary:', error);
+            }

@@ -1,0 +1,125 @@
+name: 📰 Article
+description: Save an interesting article for later reading
+title: "[ARTICLE] "
+labels: ["to-read"]
+body:
+  - type: input
+    id: article-title
+    attributes:
+      label: "📰 Article Title"
+      description: "The headline or title of the article"
+      placeholder: "e.g., The Future of AI in Software Development"
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: "✍️ Author"
+      description: "Who wrote this article?"
+      placeholder: "e.g., Jane Smith"
+
+  - type: input
+    id: source
+    attributes:
+      label: "📮 Source"
+      description: "Which newsletter or publication?"
+      placeholder: "e.g., Morning Brew, Hacker News, Medium"
+
+  - type: input
+    id: url
+    attributes:
+      label: "🔗 Article URL"
+      description: "Direct link to the article"
+      placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reading-time
+    attributes:
+      label: "⏱️ Estimated Reading Time"
+      description: "How long will this take to read?"
+      options:
+        - "⚡ Quick read (< 5 min)"
+        - "📖 Medium read (5-15 min)"
+        - "📚 Long read (15+ min)"
+        - "🎓 Research piece (30+ min)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "🎯 Priority Level"
+      description: "How important is this article?"
+      options:
+        - "🔥 High - Must read soon"
+        - "⭐ Medium - Interesting"
+        - "📋 Low - When I have time"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: categories
+    attributes:
+      label: "🏷️ Categories"
+      description: "What topics does this article cover? (Select all that apply)"
+      options:
+        - label: "🔧 Technology"
+          value: tech
+        - label: "💼 Business"
+          value: business
+        - label: "📚 Personal Development"
+          value: personal
+        - label: "🌍 Industry News"
+          value: industry
+        - label: "🤖 AI/Machine Learning"
+          value: ai
+        - label: "💰 Finance"
+          value: finance
+        - label: "🚀 Startups"
+          value: startups
+        - label: "📈 Productivity"
+          value: productivity
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "📝 Quick Summary"
+      description: "Briefly describe what this article is about (2-3 sentences)"
+      placeholder: "This article discusses..."
+      render: markdown
+
+  - type: textarea
+    id: why-interesting
+    attributes:
+      label: "🤔 Why This Interests Me"
+      description: "What caught your attention? Why do you want to read this?"
+      placeholder: "I'm interested in this because..."
+      render: markdown
+
+  - type: textarea
+    id: key-quotes
+    attributes:
+      label: "💬 Key Quotes or Points (Optional)"
+      description: "Any standout quotes or key points you noticed while skimming?"
+      placeholder: "> Interesting quote from the article..."
+      render: markdown
+
+  - type: checkboxes
+    id: action-items
+    attributes:
+      label: "📋 Potential Actions"
+      description: "What might you want to do after reading this?"
+      options:
+        - label: "🔍 Research further"
+          value: research
+        - label: "💬 Discuss with team/friends"
+          value: discuss
+        - label: "🛠️ Try implementing ideas"
+          value: implement
+        - label: "📚 Find related articles"
+          value: find-related
+        - label: "📝 Write a summary/review"
+          value: write-summary

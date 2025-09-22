@@ -1,0 +1,81 @@
+name: 💡 Quick Note
+description: Save a quick thought, quote, or insight
+title: "[NOTE] "
+labels: ["note", "insight"]
+body:
+  - type: input
+    id: note-title
+    attributes:
+      label: "💡 Note Title"
+      description: "Brief title for your note or insight"
+      placeholder: "e.g., Interesting productivity hack, Key insight about AI"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: note-type
+    attributes:
+      label: "📝 Note Type"
+      description: "What kind of note is this?"
+      options:
+        - "💬 Quote"
+        - "💡 Insight"
+        - "🔗 Link to explore"
+        - "❓ Question to research"
+        - "📋 Action item"
+        - "🎯 Goal or objective"
+    validations:
+      required: true
+
+  - type: textarea
+    id: content
+    attributes:
+      label: "📄 Content"
+      description: "Your note, quote, or insight"
+      placeholder: "Write your thoughts here..."
+      render: markdown
+    validations:
+      required: true
+
+  - type: input
+    id: source-context
+    attributes:
+      label: "📮 Source/Context (Optional)"
+      description: "Where did this come from? Related article issue number?"
+      placeholder: "e.g., From #123, Morning meeting, Random thought"
+
+  - type: checkboxes
+    id: categories
+    attributes:
+      label: "🏷️ Related Topics"
+      description: "What topics does this relate to?"
+      options:
+        - label: "🔧 Technology"
+          value: tech
+        - label: "💼 Business"
+          value: business
+        - label: "📚 Personal Development"
+          value: personal
+        - label: "🎯 Productivity"
+          value: productivity
+        - label: "💡 Ideas"
+          value: ideas
+        - label: "🔍 Research"
+          value: research
+
+  - type: checkboxes
+    id: follow-up
+    attributes:
+      label: "📋 Follow-up Actions"
+      description: "What should you do with this note?"
+      options:
+        - label: "🔍 Research further"
+          value: research-more
+        - label: "💬 Discuss with someone"
+          value: discuss
+        - label: "📝 Expand into full article"
+          value: expand
+        - label: "🔗 Find related content"
+          value: find-related
+        - label: "⏰ Revisit later"
+          value: revisit
